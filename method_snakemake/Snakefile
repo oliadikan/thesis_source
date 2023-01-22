@@ -1,0 +1,52 @@
+# For each modus lists, cpgs and samples have to be set up.
+# Files of "marker" unique 29-mers have to be placed in the same directory, and be named 
+# "N_cpgs_kmers_list_upd"/"N_cpgs_kmers_list_rev", where N is the chromosome number (or X/Y). 
+# Files with chromosome-wise CpG positions have to be placed in the same directory, 
+# have the same name, altering only in the chromosome number, and end with "N.txt", 
+# where N is the chromosome number (or X/Y).
+# All the config parameters have to be provided regardless of the used modus, 
+# however, for modus_1 only parameter dir is important, chrom and proc can be fairly random 
+# in their range, for modus_2 vice versa.
+# Usage: snakemake desired_modus --config dir=desired_sample_for_modus_1 chrom=desired_chromosome_for_modus_2 proc=desired_number_of_processes_for_modus_2 --cores cores_specification
+
+rule modus_1:
+ # Processing one sample for multiple chromosomes.
+ # md1_dir and output have to be set up.
+ # The set of processed chromosomes is controlled by commenting/uncommenting dedicated lines in
+ # modus_1.sh.
+ input:
+  lists = "/scratch/chroms/corrected_lists", # path to the directory with "marker" unique 29-mers lists 
+  cpgs = "/scratch/chroms/cpgs/CpGs_", # path to CpG positions files (up to N.txt, N - chromosome number)
+  samples = "/scratch/wgbs-deep-moma/raw" # path to the directory with samples subdirectories
+ params:
+  drt = config['dir'], # sample directory
+  md1_dir = "/scratch/chroms/snmk/modus_1", # modus directory
+  out = "".join([md1_dir, "/", config['dir']]), # output directory
+  out_l = "".join([md1_dir, "/", config['dir'], "/log"]) # directory for log files
+ output:
+  "/scratch/chroms/snmk/finished_m1.txt" # file, existence of which signals to the snakemake 
+  #that job succeded (file MUST NOT exist beforehand, directory MUST exist beforehand!)
+ script:
+  "modus_1.sh"
+
+
+rule modus_2:
+ # Processing multiple samples for one chromosome.
+ # drt, md2_dir and output have to be set up.
+ # The set of processed samples is controlled by commenting/uncommenting (adding if necessary)
+ # dedicated lines in modus_2.sh. 
+ input:
+  lists = "/scratch/chroms/corrected_lists", # path to the directory with "marker" unique 29-mers lists 
+  cpgs = "/scratch/chroms/cpgs/CpGs_", # path to CpG positions files (up to N.txt, N - chromosome number)
+  samples = "/scratch/wgbs-deep-moma/raw" # path to the directory with samples subdirectories
+ params:
+  drt = ["Sample_43_Hm03_BlMa_Ct2_WGBS_E_TS", "Sample_43_Hm03_BlMo_Ct2_WGBS_E_TS"], # sample directories #["Sample_43_Hm03_BlMa_Ct2_WGBS_E_EC", "Sample_43_Hm03_BlMa_Ct2_WGBS_E_TS", "Sample_43_Hm03_BlMo_Ct2_A", "Sample_43_Hm03_BlMo_Ct2_WGBS_E_EC", "Sample_43_Hm03_BlMo_Ct2_WGBS_E_TS", "Sample_43_Hm05_BlMa_Ct1_TS", "Sample_43_Hm05_BlMa_Ct1_WGBS_E_EC", "Sample_43_Hm05_BlMa_Ct1_WGBS_E_TS", "Sample_43_Hm05_BlMo_Ct1_TS", "Sample_43_Hm05_BlMo_Ct1_WGBS_E_EC", "Sample_43_Hm05_BlMo_Ct1_WGBS_E_TS"], 
+  chrom = config['chrom'], # chromosome number
+  pr = config['proc'], # amount of processes
+  md2_dir = "/scratch/chroms/snmk/modus_2", # modus directory
+  l = "".join([md2_dir, "/log"]) # directory for log files
+ output:
+  "/scratch/chroms/snmk/finished_m2.txt" # file, existence of which signals to the snakemake 
+  #that job succeded (file MUST NOT exist beforehand, directory MUST exist beforehand!)
+ script:
+  "modus_2.sh"
